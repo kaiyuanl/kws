@@ -2,107 +2,97 @@
 
 struct socket *kws_sock_alloc(void)
 {
-    struct socket *new_sock = NULL;
-
-    printk(KERN_DEBUG "Enter kws_sock_alloc\n");
-
-    if(sock_create_lite(PF_INET,SOCK_STREAM,IPPROTO_TCP, &new_sock) < 0)
-    {
-        return NULL;
-    }
-
-    printk(KERN_DEBUG "Leave kws_sock_alloc\n");
-
-    return new_sock;
+	struct socket *sock;
+	int error;
+	error = sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
+	if (error < 0)
+		return NULL;
+	return sock;
 }
 
-int kws_sock_release(struct socket *sk)
+void kws_sock_release(struct socket *sock)
 {
-    return 0;
+	sock_release(sock);
 }
 
-int kws_start_listen(int port)
+struct socket *kws_sock_listen(int port)
 {
-    struct socket *sock;
-    struct sockaddr_in sin;
-    int error;
+	struct socket *sock;
+	struct sockaddr_in sin;
+	int error;
 
-    printk(KERN_DEBUG "Enter kws_start_listen\n");
+	INFO("Enter kws_sock_listen");
 
-    error = sock_create(PF_INET,SOCK_STREAM,IPPROTO_TCP,&sock);
-    if (error < 0)
-    {
-         printk(KERN_ERR "Create socket FAILED\n");
-         return -1;
-    }
+	sock = kws_sock_alloc();
+	if (sock == NULL) {
+		ERR("Allocate socket failed");
+		return NULL;
+	}
 
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = INADDR_ANY;
-    sin.sin_port = htons((unsigned short)port);
+	sin.sin_family = AF_INET;
+	sin.sin_addr.s_addr = INADDR_ANY;
+	sin.sin_port = htons((unsigned short)port);
 
-    printk(KERN_DEBUG "Bind socket to port %d\n", port);
-    error = sock->ops->bind(sock,(struct sockaddr*)&sin,sizeof(sin));
-    if (error < 0)
-    {
-        printk(KERN_ERR "Bind socket FAILED\n");
-        return -1;
-    }
+	INFO("Start bind");
+	error = sock->ops->bind(sock,(struct sockaddr*)&sin,sizeof(sin));
+	if (error < 0) {
+		ERR("Bind socket failed");
+		kws_sock_release(sock);
+		return NULL;
+	}
 
-    //sock->sk->reuse = SK_CAN_REUSE;
+	INFO("Start listen");
+	error=sock->ops->listen(sock,BACKLOG);
+	if (error < 0)
+	{
+		ERR("Listen socket failed");
+		kws_sock_release(sock);
+		return NULL;
+	}
 
-    error=sock->ops->listen(sock,BACKLOG);
-    if (error < 0)
-    {
-        printk(KERN_ERR "Listen socket FAILED\n");
-        return -1;
-    }
-
-    Listening_Socket = sock;
-
-    printk(KERN_DEBUG "Leave kws_start_listen\n");
-    return 0;
+	INFO("Leave kws_sock_listen");
+	return sock;
 }
 
-int kws_epoll_create(struct eventpoll **new_ep)
+struct socket *kws_accept(struct socket *sock)
 {
-    return sys_epoll_create1(1);
+	struct socket *new_sock;
+	int error;
+
+	INFO("Enter kws_accept");
+
+	if (sock == NULL)
+		return NULL;
+
+	new_sock = kws_sock_alloc();
+	if (new_sock == NULL)
+		return NULL;
+
+	new_sock->ops = sock->ops;
+
+	INFO("Start accept");
+	error = sock->ops->accept(sock, new_sock, O_RDWR);
+	INFO("Finish accept");
+
+	if (error < 0) {
+		kws_sock_release(new_sock);
+		return NULL;
+	}
+
+	INFO("Leave kws_accept");
+	return new_sock;
 }
 
-int kws_epoll_ctl(void)
+int kws_sock_read(struct socket *sock, char *buff,
+				size_t len)
 {
-    return 0;
+	struct kvec vec = { .iov_len = PAGE_SIZE, .iov_base = buff, };
+	struct msghdr msg = { .msg_flags = MSG_DONTWAIT, };
+	return kernel_recvmsg(sock, &msg, &vec, 1, len, MSG_DONTWAIT);
 }
 
-int kws_accept(struct socket **new_sock)
+int kws_sock_write(struct socket *sock, char *buff,
+				size_t len)
 {
-    int error;
-
-    printk(KERN_DEBUG "Enter kws_accept\n");
-
-
-    if (Listening_Socket == NULL)
-    {
-        return -1;
-    }
-
-    *new_sock = kws_sock_alloc();
-    if (new_sock == NULL|| *new_sock == NULL)
-    {
-        printk(KERN_ERR "Allocate socket FAILED\n");
-        return -1;
-    }
-
-    (*new_sock)->ops = Listening_Socket->ops;
-
-    printk(KERN_DEBUG "Start accept\n");
-    error = Listening_Socket->ops->accept(Listening_Socket,*new_sock,O_RDWR);
-    printk(KERN_DEBUG "Finish accept\n");
-
-    if(error >= 0 && *new_sock)
-    {
-        printk(KERN_DEBUG "Accept Completed\n");
-    }
-
-    printk(KERN_DEBUG "Leave kws_accept\n");
-    return error;
+	return 0;
 }

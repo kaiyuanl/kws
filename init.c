@@ -1,45 +1,66 @@
 #include "proto.h"
 
+MODULE_AUTHOR("Kaiyuan Liang");
 MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("Kernel-based Web Server");
 
-int CPUNUM = 0;
+static int port = 8080;
+module_param(port, int, 0644);
+MODULE_PARM_DESC(port, "The port kws will listen");
 
-struct socket *Listening_Socket = NULL;
+static int workers = 0;
+module_param(workers, int, 0644);
+MODULE_PARM_DESC(workers, "");
 
-struct task_struct *Master_Thread = NULL;
+int CPU;
+int WorkerNum;
+int ListeningPort;
+struct socket *ListeningSocket = NULL;
+struct task_struct *Master = NULL;
+
 
 static int kws_init(void)
 {
-    struct task_struct *master;
+	struct task_struct *master;
 
-    printk(KERN_DEBUG "Enter kws_init\n");
-    printk(KERN_ALERT "Enter Kaiyuan's Web Server\n");
+	INFO("---------------Start Web Server---------------\n");
+	INFO("Enter kws_init");
 
-    printk(KERN_ALERT "Create master thread\n");
-    master = kthread_run(&kws_master_init, NULL, "KWS Master Thread");
-    if(master == NULL)
-    {
-        printk(KERN_ERR "Create master thread FAILED\n");
-    }
-    Master_Thread = master;
+	ListeningPort = port;
+	WorkerNum = workers;
+	master = kthread_run(&kws_master, NULL, "kws master thread");
+	if(master == NULL) {
+		ERR("Create master thread failed\n");
+	}
+	Master = master;
 
-    printk(KERN_DEBUG "Leave kws_init\n");
+	INFO("Leave kws_init");
 
-    return 0;
+	return 0;
 }
 
 static void kws_exit(void)
 {
-    printk(KERN_DEBUG "Enter kws_exit\n");
-	printk(KERN_ALERT "Leave Kaiyuan's Web Server\n");
-    if(Master_Thread)
-    {
-        if(kthread_stop(Master_Thread) < 0)
-        {
-            printk(KERN_ERR "Release master thread FAILED\n");
-        }
-    }
-    printk(KERN_DEBUG "Leave kws_exit\n");
+	int i;
+	INFO("Enter kws_exit");
+
+	for (i = 0; i < WorkerNum; i++) {
+		if (Workers[i] == NULL)
+			continue;
+
+		if (kthread_stop(Workers[i]) < 0) {
+			ERR("Stop worker thread %d failed", i);
+		}
+	}
+
+	if (Master != NULL && kthread_stop(Master) < 0) {
+		ERR("Stop master thread failed");
+	}
+
+	kws_request_queue_release(RequestQueue);
+
+	kws_sock_release(ListeningSocket);
+	INFO("Leave kws_exit");
 }
 
 module_init(kws_init);

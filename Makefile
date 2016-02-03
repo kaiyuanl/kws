@@ -1,8 +1,14 @@
-obj-m += kws.o
-kws-objs := init.o master.o worker.o socket.o
+TARGET=kws3
+
+obj-m += ${TARGET}.o
+${TARGET}-objs := init.o master.o worker.o socket.o queue.o request.o
+
+BUILD=/lib/modules/$(shell uname -r)/build
+
+CFLAG="-D KWS_DEBUG"
 
 all:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules CFLAGS="-Wno-error=implicit-function-declaration"
+	make -C $(BUILD) M=$(PWD) -S modules
 	rm *.order *.symvers *.mod.c
 	rm .*.*.*
 	rm -rf .tmp_versions
