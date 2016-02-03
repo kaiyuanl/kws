@@ -2,6 +2,7 @@
 
 struct kws_queue *RequestQueue;
 struct task_struct **Workers;
+int KWSSTATUS;
 
 int kws_master(void *none)
 {
@@ -46,6 +47,10 @@ int kws_master(void *none)
 	}
 
 	for (;;) {
+		if (KWSSTATUS == STOP) {
+			return 0;
+		}
+
 		new_sock = kws_accept(ListeningSocket);
 		if (new_sock == NULL)
 			continue;

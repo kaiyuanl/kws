@@ -31,6 +31,7 @@
 #endif
 
 extern int KWSSTATUS;
+#define RUNNING 0
 #define RESTART	1
 #define STOP	2
 

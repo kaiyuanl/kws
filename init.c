@@ -12,6 +12,10 @@ static int workers = 0;
 module_param(workers, int, 0644);
 MODULE_PARM_DESC(workers, "");
 
+static int status = RUNNING;
+module_param(status, int, 0644);
+MODULE_PARM_DESC(status, "Running - 0\nRestart - 1\nStop - 2");
+
 int CPU;
 int WorkerNum;
 int ListeningPort;
@@ -28,6 +32,7 @@ static int kws_init(void)
 
 	ListeningPort = port;
 	WorkerNum = workers;
+	KWSSTATUS = status;
 	master = kthread_run(&kws_master, NULL, "kws master thread");
 	if(master == NULL) {
 		ERR("Create master thread failed\n");
