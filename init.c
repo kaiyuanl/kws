@@ -49,21 +49,29 @@ static void kws_exit(void)
 	int i;
 	INFO("Enter kws_exit");
 
-	for (i = 0; i < WorkerNum; i++) {
-		if (Workers[i] == NULL)
-			continue;
+	INFO("Release worker threads");
+	if (Workers != NULL) {
+		for (i = 0; i < WorkerNum; i++) {
+			INFO("Release worker");
+			if (Workers[i] == NULL)
+				continue;
 
-		if (kthread_stop(Workers[i]) < 0) {
-			ERR("Stop worker thread %d failed", i);
+			if (kthread_stop(Workers[i]) < 0) {
+				ERR("Stop worker thread failed");
+			}
+			INFO("Finish release worker");
 		}
 	}
 
+	INFO("Release master thread");
 	if (Master != NULL && kthread_stop(Master) < 0) {
 		ERR("Stop master thread failed");
 	}
 
+	INFO("Release request queue");
 	kws_request_queue_release(RequestQueue);
 
+	INFO("Release listening socket");
 	kws_sock_release(ListeningSocket);
 	INFO("Leave kws_exit");
 }

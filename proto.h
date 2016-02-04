@@ -73,8 +73,8 @@ int kws_worker(void *none);
 struct socket *kws_sock_alloc(void);
 void kws_sock_release(struct socket *sock);
 struct socket *kws_sock_listen(int port);
-struct socket *kws_accept(struct socket *new_sock);
-int kws_sock_read(struct socket *socket, char *buff, size_t len);
+struct socket *kws_accept(struct socket *sock);
+int kws_sock_read(struct socket *sock, char *buff, size_t len);
 int kws_sock_write(struct socket *sock, char *buff, size_t len);
 
 

@@ -4,15 +4,21 @@ struct socket *kws_sock_alloc(void)
 {
 	struct socket *sock;
 	int error;
+
+	INFO("Enter kws_sock_alloc");
 	error = sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
 	if (error < 0)
 		return NULL;
+
+	INFO("Leave kws_sock_alloc");
 	return sock;
 }
 
 void kws_sock_release(struct socket *sock)
 {
+	INFO("Enter kws_sock_release");
 	sock_release(sock);
+	INFO("Leave kws_sock_release");
 }
 
 struct socket *kws_sock_listen(int port)
@@ -86,9 +92,23 @@ struct socket *kws_accept(struct socket *sock)
 int kws_sock_read(struct socket *sock, char *buff,
 				size_t len)
 {
-	struct kvec vec = { .iov_len = PAGE_SIZE, .iov_base = buff, };
-	struct msghdr msg = { .msg_flags = MSG_DONTWAIT, };
-	return kernel_recvmsg(sock, &msg, &vec, 1, len, MSG_DONTWAIT);
+	int rlen;
+
+	struct kvec vec = {
+		.iov_len = len,
+		.iov_base = buff
+	};
+
+	struct msghdr msg = {
+		.msg_flags = MSG_DONTWAIT
+	};
+
+	INFO("Enter kws_sock_read");
+
+	rlen = kernel_recvmsg(sock, &msg, &vec, 1, len, MSG_DONTWAIT);
+	INFO("Leave kws_sock_read");
+
+	return rlen;
 }
 
 int kws_sock_write(struct socket *sock, char *buff,

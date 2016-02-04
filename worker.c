@@ -6,7 +6,6 @@ int kws_worker(void *none)
 	int len;
 	printk(KERN_DEBUG "Enter worker_init\n");
 
-
 	for(;;)
 	{
 		wait_event_interruptible(RequestQueue->wq, RequestQueue->count > 0);
@@ -19,6 +18,7 @@ int kws_worker(void *none)
 
 		switch (request->status) {
 		case NEW:
+			INFO("case NEW");
 			request->mem = (char *)kmalloc(PAGE_SIZE, GFP_KERNEL);
 			if (request->mem == NULL)
 			{
@@ -27,6 +27,7 @@ int kws_worker(void *none)
 			request->status = READING;
 			/* No break here */
 		case READING:
+			INFO("case Reading");
 			while ((len = kws_sock_read(request->sock,
 				request->mem + request->len,
 				request->size - request->len)) >= 0)

@@ -57,16 +57,19 @@ int kws_master(void *none)
 
 		request = kws_request_alloc();
 		if (request == NULL) {
+			INFO("Allocate for request failed");
 			kws_sock_release(new_sock);
 			continue;
 		}
 
 		request->sock = new_sock;
 
+		INFO("Start enqueue");
 		while (kws_request_queue_in(RequestQueue, request) < 0) {
 			INFO("Request queue full");
 			wake_up_interruptible(&(RequestQueue->wq));
 		}
+		INFO("Finish enqueue");
 		wake_up_interruptible(&(RequestQueue->wq));
 	}
 

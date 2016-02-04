@@ -17,7 +17,7 @@ struct kws_request *kws_request_alloc(void)
 {
 	struct kws_request *request;
 
-	INFO("Enter kws_request_init");
+	INFO("Enter kws_request_alloc");
 	request = (struct kws_request *)kmalloc(sizeof(struct kws_request), GFP_KERNEL);
 	if (request) {
 		ERR("Allcoate memory for reqeust struct FAILED");
@@ -29,18 +29,24 @@ struct kws_request *kws_request_alloc(void)
 	request->size = PAGE_SIZE;
 	request->len = 0;
 
-	INFO("Leave kws_request_init");
+	INFO("Leave kws_request_alloc");
 	return request;
 }
 
 void kws_request_release(struct kws_request *request)
 {
-	if (request != NULL) {
+	INFO("Enter kws_request_release");
+	if (request == NULL)
+		return;
 
-		if (request->sock != NULL)
-			kws_sock_release(request->sock);
+	INFO("Release socket");
+	if (request->sock != NULL)
+		kws_sock_release(request->sock);
 
-		kfree(request->mem);
-		kfree(request);
-	}
+	INFO("Release mem");
+	kfree(request->mem);
+
+	INFO("Release request");
+	kfree(request);
+	INFO("Leave kws_request_release");
 }
