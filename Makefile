@@ -1,4 +1,4 @@
-TARGET=kws2
+TARGET=kws
 
 obj-m += ${TARGET}.o
 ${TARGET}-objs := init.o master.o worker.o socket.o queue.o request.o

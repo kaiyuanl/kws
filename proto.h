@@ -22,18 +22,19 @@
 #define DONE 2		/* Finish read data from socket */
 #define REUSE 3
 
-#define INFO(x, ...)     printk(KERN_INFO  "%s\n", x, ## __VA_ARGS__)
+#define INFO(x, ...)     printk(KERN_INFO x"\n", ##__VA_ARGS__)
 
 #ifdef KWS_DEBUG
-#define ERR(x, ...)      printk(KERN_DEBUG "%s at %s line %i\n",x, ## __VA_ARGS__ ,__FILE__,__LINE__)
+#define ERR(x,...)      printk(KERN_ERR x"at %s line %i\n", ##__VA_ARGS__ ,__FILE__,__LINE__)
 #else
-#define ERR(x, ...)      do {} while (0)
+#define ERR(x,...)      do {} while (0)
 #endif
 
-extern int KWSSTATUS;
+extern int KwsStatus;
 #define RUNNING 0
 #define RESTART	1
 #define STOP	2
+#define EXIT	3
 
 extern int CPU;
 extern int ListeningPort;

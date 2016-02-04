@@ -77,13 +77,14 @@ struct socket *kws_accept(struct socket *sock)
 	new_sock->ops = sock->ops;
 
 	INFO("Start accept");
-	error = sock->ops->accept(sock, new_sock, O_RDWR);
-	INFO("Finish accept");
-
-	if (error < 0) {
-		kws_sock_release(new_sock);
-		return NULL;
+	while ((error = sock->ops->accept(sock, new_sock, O_RDWR|O_NONBLOCK)) < 0) {
+		if (KwsStatus == EXIT) {
+			kws_sock_release(new_sock);
+			return NULL;
+		}
 	}
+
+	INFO("Finish accept");
 
 	INFO("Leave kws_accept");
 	return new_sock;

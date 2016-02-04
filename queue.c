@@ -106,10 +106,12 @@ struct kws_request *kws_request_queue_out(struct kws_queue *queue)
 void kws_request_queue_release(struct kws_queue *queue)
 {
 	int i;
+	spin_lock(&(queue->lock));
 	for (i = 0; i < queue->size; i++) {
 		if (queue->items[i] != NULL) {
 			kws_request_release((struct kws_request *)(queue->items[i]));
 		}
 	}
+	spin_unlock(&(queue->lock));
 	kws_queue_release(queue);
 }

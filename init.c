@@ -18,6 +18,7 @@ MODULE_PARM_DESC(status, "Running - 0\nRestart - 1\nStop - 2");
 
 int CPU;
 int WorkerNum;
+int KwsStatus;
 int ListeningPort;
 struct socket *ListeningSocket = NULL;
 struct task_struct *Master = NULL;
@@ -32,7 +33,7 @@ static int kws_init(void)
 
 	ListeningPort = port;
 	WorkerNum = workers;
-	KWSSTATUS = status;
+	KwsStatus = status;
 	master = kthread_run(&kws_master, NULL, "kws master thread");
 	if(master == NULL) {
 		ERR("Create master thread failed\n");
@@ -50,12 +51,19 @@ static void kws_exit(void)
 	INFO("Enter kws_exit");
 
 	INFO("Release worker threads");
+	KwsStatus = EXIT;
 	if (Workers != NULL) {
+		if (RequestQueue != NULL) {
+			INFO("Wakeup worker threads so that they can finish themselves");
+			wake_up_interruptible(&(RequestQueue->wq));
+		}
+
 		for (i = 0; i < WorkerNum; i++) {
 			INFO("Release worker");
 			if (Workers[i] == NULL)
 				continue;
 
+			INFO("Worker %p\n", Workers[i]);
 			if (kthread_stop(Workers[i]) < 0) {
 				ERR("Stop worker thread failed");
 			}

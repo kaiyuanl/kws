@@ -19,7 +19,7 @@ struct kws_request *kws_request_alloc(void)
 
 	INFO("Enter kws_request_alloc");
 	request = (struct kws_request *)kmalloc(sizeof(struct kws_request), GFP_KERNEL);
-	if (request) {
+	if (request == NULL) {
 		ERR("Allcoate memory for reqeust struct FAILED");
 		return NULL;
 	}

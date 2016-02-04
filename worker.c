@@ -4,11 +4,16 @@ int kws_worker(void *none)
 {
 	struct kws_request *request;
 	int len;
-	printk(KERN_DEBUG "Enter worker_init\n");
+	printk(KERN_DEBUG "Enter kws_worker\n");
 
-	for(;;)
-	{
-		wait_event_interruptible(RequestQueue->wq, RequestQueue->count > 0);
+	while(1) {
+		if (RequestQueue == NULL)
+			return 0;
+
+		wait_event_interruptible(RequestQueue->wq, RequestQueue->count > 0 || KwsStatus == EXIT);
+		if (KwsStatus == EXIT) {
+			return 0;
+		}
 
 		request = kws_request_queue_out(RequestQueue);
 		if (request == NULL) {
@@ -34,17 +39,18 @@ int kws_worker(void *none)
 			{
 				request->len += len;
 			}
-			if (len == EAGAIN || len == EWOULDBLOCK || len == EINTR)
-			{
+
+			if (len == EAGAIN || len == EWOULDBLOCK || len == EINTR) {
 				kws_request_queue_in(RequestQueue, request);
 				continue;
 			}
-			if (len == 0)
-			{
+
+			if (len == 0) {
 				request->status = DONE;
 				request->mem[len] = '\0';
 				printk(KERN_DEBUG "%s\n", request->mem);
 			}
+
 			break;
 		case DONE:
 			printk(KERN_INFO "%s", request->mem);
@@ -56,6 +62,6 @@ int kws_worker(void *none)
 		}
 	}
 
-	printk(KERN_DEBUG "Leave worker_init\n");
+	printk(KERN_DEBUG "Leave kws_worker\n");
 	return 0;
 }

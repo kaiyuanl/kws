@@ -41,17 +41,22 @@ int kws_master(void *none)
 		if (!IS_ERR(Workers[i])) {
 			kthread_bind(Workers[i], i);
 			wake_up_process(Workers[i]);
+			INFO("Create thread worker %d", i);
 		} else {
 			ERR("Create worker thread failed");
 		}
 	}
 
-	for (;;) {
-		if (KWSSTATUS == STOP) {
+	while(1) {
+		if (KwsStatus == EXIT)
+			return 0;
+
+		new_sock = kws_accept(ListeningSocket);
+		if (KwsStatus == EXIT) {
+			INFO("Get EXIT Status in master");
 			return 0;
 		}
 
-		new_sock = kws_accept(ListeningSocket);
 		if (new_sock == NULL)
 			continue;
 
