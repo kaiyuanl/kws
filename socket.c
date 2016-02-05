@@ -29,8 +29,8 @@ struct socket *kws_sock_listen(int port)
 
 	INFO("Enter kws_sock_listen");
 
-	sock = kws_sock_alloc();
-	if (sock == NULL) {
+	error = sock_create(PF_INET,SOCK_STREAM,IPPROTO_TCP,&sock);
+	if (error < 0) {
 		ERR("Allocate socket failed");
 		return NULL;
 	}
@@ -40,7 +40,7 @@ struct socket *kws_sock_listen(int port)
 	sin.sin_port = htons((unsigned short)port);
 
 	INFO("Start bind");
-	error = sock->ops->bind(sock,(struct sockaddr*)&sin,sizeof(sin));
+	error = sock->ops->bind(sock, (struct sockaddr*)&sin, sizeof(sin));
 	if (error < 0) {
 		ERR("Bind socket failed");
 		kws_sock_release(sock);
@@ -64,9 +64,7 @@ struct socket *kws_accept(struct socket *sock)
 {
 	struct socket *new_sock;
 	int error;
-
 	INFO("Enter kws_accept");
-
 	if (sock == NULL)
 		return NULL;
 
@@ -75,8 +73,8 @@ struct socket *kws_accept(struct socket *sock)
 		return NULL;
 
 	new_sock->ops = sock->ops;
-
 	INFO("Start accept");
+
 	while ((error = sock->ops->accept(sock, new_sock, O_RDWR|O_NONBLOCK)) < 0) {
 		if (KwsStatus == EXIT) {
 			kws_sock_release(new_sock);
@@ -84,14 +82,17 @@ struct socket *kws_accept(struct socket *sock)
 		}
 	}
 
-	INFO("Finish accept");
+	if (error < 0) {
+		ERR("Socket allocate failed");
+		return NULL;
+	}
 
+	INFO("Finish accept");
 	INFO("Leave kws_accept");
 	return new_sock;
 }
 
-int kws_sock_read(struct socket *sock, char *buff,
-				size_t len)
+int kws_sock_read(struct socket *sock, char *buff, size_t len)
 {
 	int rlen;
 
@@ -112,8 +113,7 @@ int kws_sock_read(struct socket *sock, char *buff,
 	return rlen;
 }
 
-int kws_sock_write(struct socket *sock, char *buff,
-				size_t len)
+int kws_sock_write(struct socket *sock, char *buff, size_t len)
 {
 	return 0;
 }

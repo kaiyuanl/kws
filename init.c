@@ -20,8 +20,8 @@ int CPU;
 int WorkerNum;
 int KwsStatus;
 int ListeningPort;
-struct socket *ListeningSocket = NULL;
-struct task_struct *Master = NULL;
+struct socket *ListeningSocket;
+struct task_struct *Master;
 
 
 static int kws_init(void)

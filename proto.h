@@ -22,10 +22,10 @@
 #define DONE 2		/* Finish read data from socket */
 #define REUSE 3
 
-#define INFO(x, ...)     printk(KERN_INFO x"\n", ##__VA_ARGS__)
+#define INFO(x, ...)     printk(KERN_ALERT x"\n", ##__VA_ARGS__)
 
 #ifdef KWS_DEBUG
-#define ERR(x,...)      printk(KERN_ERR x"at %s line %i\n", ##__VA_ARGS__ ,__FILE__,__LINE__)
+#define ERR(x,...)      printk(KERN_ALERT x"at %s line %i\n", ##__VA_ARGS__ ,__FILE__,__LINE__)
 #else
 #define ERR(x,...)      do {} while (0)
 #endif

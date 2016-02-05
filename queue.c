@@ -3,9 +3,15 @@
 struct kws_queue *kws_queue_alloc(unsigned int size)
 {
 	struct kws_queue *queue;
-	queue = (struct kws_queue *)kmalloc(sizeof(struct kws_queue), GFP_KERNEL);
-	if (queue == NULL)
+
+	if (size <= 0) {
 		return NULL;
+	}
+
+	queue = (struct kws_queue *)kmalloc(sizeof(struct kws_queue), GFP_KERNEL);
+	if (queue == NULL) {
+		return NULL;
+	}
 
 	spin_lock_init(&(queue->lock));
 	init_waitqueue_head(&(queue->wq));
@@ -51,6 +57,7 @@ int kws_queue_in(struct kws_queue *queue, void *item)
 	(queue->in)++;
 	(queue->count)++;
 	spin_unlock(&(queue->lock));
+
 	return 0;
 }
 
@@ -100,7 +107,7 @@ int kws_request_queue_in(struct kws_queue *queue, struct kws_request *request)
 
 struct kws_request *kws_request_queue_out(struct kws_queue *queue)
 {
-	return (struct kws_request *)kws_request_queue_out(queue);
+	return (struct kws_request *)kws_queue_out(queue);
 }
 
 void kws_request_queue_release(struct kws_queue *queue)

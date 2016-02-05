@@ -26,7 +26,7 @@ struct kws_request *kws_request_alloc(void)
 	request->sock = NULL;
 	request->status = NEW;
 	request->mem = NULL;
-	request->size = PAGE_SIZE;
+	request->size = 1024;
 	request->len = 0;
 
 	INFO("Leave kws_request_alloc");

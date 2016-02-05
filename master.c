@@ -2,7 +2,6 @@
 
 struct kws_queue *RequestQueue;
 struct task_struct **Workers;
-int KWSSTATUS;
 
 int kws_master(void *none)
 {
@@ -10,6 +9,7 @@ int kws_master(void *none)
 	struct socket *new_sock;
 	struct kws_request *request;
 	int i;
+
 	INFO("Enter kws_master");
 
 	CPU = num_online_cpus();
@@ -34,8 +34,7 @@ int kws_master(void *none)
 	if (Workers == NULL)
 		return -1;
 
-	for (i = 0; i < WorkerNum; i++)
-	{
+	for (i = 0; i < WorkerNum; i++) {
 		Workers[i] = kthread_create(&kws_worker, NULL, "kws worker thread %d", i);
 
 		if (!IS_ERR(Workers[i])) {
@@ -47,9 +46,7 @@ int kws_master(void *none)
 		}
 	}
 
-	while(1) {
-		if (KwsStatus == EXIT)
-			return 0;
+	while(KwsStatus != EXIT) {
 
 		new_sock = kws_accept(ListeningSocket);
 		if (KwsStatus == EXIT) {
@@ -69,11 +66,13 @@ int kws_master(void *none)
 
 		request->sock = new_sock;
 
-		INFO("Start enqueue");
 		while (kws_request_queue_in(RequestQueue, request) < 0) {
-			INFO("Request queue full");
+			if (KwsStatus == EXIT) {
+				return 0;
+			}
 			wake_up_interruptible(&(RequestQueue->wq));
 		}
+
 		INFO("Finish enqueue");
 		wake_up_interruptible(&(RequestQueue->wq));
 	}

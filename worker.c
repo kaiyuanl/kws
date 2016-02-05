@@ -41,6 +41,7 @@ int kws_worker(void *none)
 			}
 
 			if (len == EAGAIN || len == EWOULDBLOCK || len == EINTR) {
+				INFO("Again || Would block || Intrupt");
 				kws_request_queue_in(RequestQueue, request);
 				continue;
 			}
@@ -48,7 +49,7 @@ int kws_worker(void *none)
 			if (len == 0) {
 				request->status = DONE;
 				request->mem[len] = '\0';
-				printk(KERN_DEBUG "%s\n", request->mem);
+				printk(KERN_DEBUG "Read Done %s\n", request->mem);
 			}
 
 			break;
