@@ -22,6 +22,7 @@ int KwsStatus;
 int ListeningPort;
 struct socket *ListeningSocket;
 struct task_struct *Master;
+size_t MemSize;
 
 
 static int kws_init(void)
@@ -34,6 +35,7 @@ static int kws_init(void)
 	ListeningPort = port;
 	WorkerNum = workers;
 	KwsStatus = status;
+	MemSize = PAGE_SIZE;
 	master = kthread_run(&kws_master, NULL, "kws master thread");
 	if(master == NULL) {
 		ERR("Create master thread failed\n");

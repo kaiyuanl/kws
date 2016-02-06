@@ -4,9 +4,9 @@ int kws_worker(void *none)
 {
 	struct kws_request *request;
 	int len;
-	printk(KERN_DEBUG "Enter kws_worker\n");
+	INFO("Enter kws_worker\n");
 
-	while(1) {
+	while(KwsStatus != EXIT) {
 		if (RequestQueue == NULL)
 			return 0;
 
@@ -24,10 +24,12 @@ int kws_worker(void *none)
 		switch (request->status) {
 		case NEW:
 			INFO("case NEW");
-			request->mem = (char *)kmalloc(PAGE_SIZE, GFP_KERNEL);
+			request->mem = (char *)kmalloc(request->size, GFP_KERNEL);
 			if (request->mem == NULL)
 			{
-
+				ERR("Allocate for request->mem failed");
+				kws_request_queue_in(RequestQueue, request);
+				break;
 			}
 			request->status = READING;
 			/* No break here */
@@ -35,34 +37,34 @@ int kws_worker(void *none)
 			INFO("case Reading");
 			while ((len = kws_sock_read(request->sock,
 				request->mem + request->len,
-				request->size - request->len)) >= 0)
+				request->size - request->len - 1)) > 0)
 			{
 				request->len += len;
 			}
 
-			if (len == EAGAIN || len == EWOULDBLOCK || len == EINTR) {
+			if (len < 0) {
 				INFO("Again || Would block || Intrupt");
-				kws_request_queue_in(RequestQueue, request);
+				while (kws_request_queue_in(RequestQueue, request) < 0)
+				{
+					wait_event_interruptible(RequestQueue->wq, RequestQueue->count > 0 || KwsStatus == EXIT);
+				}
 				continue;
 			}
 
 			if (len == 0) {
 				request->status = DONE;
-				request->mem[len] = '\0';
-				printk(KERN_DEBUG "Read Done %s\n", request->mem);
+				request->mem[request->len] = '\0';
+				INFO("-----Reading Done-----");
+				INFO("%s", request->mem);
+				INFO("-----Reading Done-----");
 			}
 
-			break;
-		case DONE:
-			printk(KERN_INFO "%s", request->mem);
-			break;
-		case OLD:
 			break;
 		default:
 			break;
 		}
 	}
 
-	printk(KERN_DEBUG "Leave kws_worker\n");
+	INFO("Leave kws_worker\n");
 	return 0;
 }

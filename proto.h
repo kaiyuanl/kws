@@ -13,7 +13,6 @@
 #include <net/sock.h>
 
 #define BACKLOG 64
-
 #define REQ_QUEUE_SIZE 1024
 
 #define OLD -1		/* Lagency structure, will be reclaimed to cache */
@@ -42,6 +41,7 @@ extern struct socket *ListeningSocket;
 extern struct task_struct *Master;
 extern struct task_struct **Workers;
 extern int WorkerNum;
+extern size_t MemSize;
 
 struct kws_request {
 	struct socket *sock;
