@@ -62,8 +62,10 @@ static void kws_exit(void)
 
 		for (i = 0; i < WorkerNum; i++) {
 			INFO("Release worker");
-			if (Workers[i] == NULL)
+
+			if (IS_ERR(Workers[i])) {
 				continue;
+			}
 
 			INFO("Worker %p\n", Workers[i]);
 			if (kthread_stop(Workers[i]) < 0) {
@@ -84,6 +86,7 @@ static void kws_exit(void)
 	INFO("Release listening socket");
 	kws_sock_release(ListeningSocket);
 	INFO("Leave kws_exit");
+	INFO("---------------Exit Web Server---------------\n")
 }
 
 module_init(kws_init);

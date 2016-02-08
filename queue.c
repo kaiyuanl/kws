@@ -30,16 +30,6 @@ struct kws_queue *kws_queue_alloc(unsigned int size)
 	return queue;
 }
 
-bool kws_queue_empty(struct kws_queue *queue)
-{
-	return (queue->count == 0);
-}
-
-bool kws_queue_full(struct kws_queue *queue)
-{
-	return (queue->count == queue->size);
-}
-
 int kws_queue_in(struct kws_queue *queue, void *item)
 {
 	if (queue == NULL)
@@ -89,16 +79,6 @@ void kws_queue_release(struct kws_queue *queue)
 struct kws_queue *kws_request_queue_alloc(unsigned int size)
 {
 	return kws_queue_alloc(size);
-}
-
-bool kws_request_queue_empty(struct kws_queue *queue)
-{
-	return kws_queue_empty(queue);
-}
-
-bool kws_request_queue_full(struct kws_queue *queue)
-{
-	return kws_queue_full(queue);
 }
 
 int kws_request_queue_in(struct kws_queue *queue, struct kws_request *request)
