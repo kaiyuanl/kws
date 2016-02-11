@@ -26,12 +26,12 @@ struct kws_request *kws_request_alloc(void)
 	request->sock = NULL;
 	request->status = NEW;
 	request->mem = NULL;
-	request->size = 1024;
+	request->size = REQ_MEM_SIZE;
 	request->len = 0;
-
-	request->lstart = 0;
-	request->lpos = 0;
-	request->status = OUTLINE;
+	request->should_read = 0;
+	request->persitent = NONE;
+	request->content_length = NONE;
+	request->pos = NONE;
 
 	INFO("Leave kws_request_alloc");
 	return request;
@@ -55,19 +55,8 @@ void kws_request_release(struct kws_request *request)
 	INFO("Leave kws_request_release");
 }
 
-static kws_string getline(char *string, int start, int end)
+void kws_http_request_handle(struct kws_request *request)
 {
-	char c;
-	char *p;
-	p = string + start;
+
 }
 
-void kws_request_parse(struct kws_request *request)
-{
-	char *pos;
-	kws_string line;
-	INFO("Enter kws_request_parse");
-	pos = request->mem;
-	while ()
-	INFO("Leave kws_request_parse");
-}

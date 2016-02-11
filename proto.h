@@ -15,6 +15,7 @@
 
 #define BACKLOG 64
 #define REQ_QUEUE_SIZE 1024
+#define REQ_MEM_SIZE 2048
 #define HASHBKT 23
 
 #define OLD -1		/* Lagency structure, will be reclaimed to cache */
@@ -22,6 +23,7 @@
 #define READING 1	/* Reading data from socket*/
 #define DONE 2		/* Finish read data from socket */
 #define REUSE 3
+#define REUSEDONE 4
 
 #define INLINE 0
 #define OUTLINE 1
@@ -49,7 +51,7 @@ extern int WorkerNum;
 extern size_t MemSize;
 
 struct kws_string {
-	char *str;
+	char *pstart;
 	size_t len;
 };
 
@@ -59,13 +61,13 @@ struct kws_request {
 	char *mem;
 	size_t size;
 	size_t len;
-	struct hlist_head fields[HASHBKT];
-
-	size_t old_len;
-	size_t bound;
+	size_t should_read;
 
 	int persistent;
-	int content_length;
+	size_t content_length;
+	int pos;
+
+	hlist_head fields;
 };
 
 struct kws_queue {
@@ -107,9 +109,10 @@ struct kws_request *kws_request_alloc(void);
 void kws_request_release(struct kws_request *request);
 
 unsigned int kws_hash(struct kws_string str);
-void kws_add_value(struct hlist_head fields[], int bkt, struct kws_string field);
-struct kws_string kws_get_value(struct hlist_head fields[], int bkt, char *field);
+void kws_hash_add(struct hlist_head fields[], int bkt, struct kws_string field);
+struct kws_string kws_hash_get(struct hlist_head fields[], int bkt, char *field);
 
-void kws_reqeust_parse(struct kws_request *request);
+int kws_strstr(char *s1, int l1, char *s2, int l2);
+void kws_http_parse(struct kws_request *request);
 
 #endif

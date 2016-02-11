@@ -1,19 +1,5 @@
-unsigned int times33(const char *char_key, ssize_t *klen)
-{
-	unsigned int  hash = 0;
-	const  unsigned  char  *key = ( const  unsigned  char  *)char_key;
-	const  unsigned  char  *p;
-	ssize_t i;
+#include "proto.h"
 
-	if  (*klen == APR_HASH_KEY_STRING) {
-		for  (p = key; *p; p++) {
-			hash = hash * 33 + *p;
-		}
-		*klen = p - key;
-	} else {
-		for  (p = key, i = *klen; i; i--, p++) {
-			hash = hash * 33 + *p;
-		}
-	}
-	return  hash;
-}
+unsigned int kws_hash(struct kws_string str);
+void kws_hash_add(struct hlist_head fields[], int bkt, struct kws_string field);
+struct kws_string kws_hash_get(struct hlist_head fields[], int bkt, char *field);
