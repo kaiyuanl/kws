@@ -14,64 +14,18 @@ int kws_strstr(char *s1, int l1, char *s2, int l2)
 	return -1;
 }
 
-struct kws_string kws_getline(char *start, size_t *pos, size_t len)
+int kws_http_parse(struct kws_request *request)
 {
-	char *curr;
-	int index;
-	struct kws_string line;
+	size_t nparsed;
+	http_parser_settings settings;
+	http_parser_init(request->parser, HTTP_REQUEST);
+	nparsed = http_parser_execute(request->parser, &settings, request->mem, request->len);
 
-	curr = string + *pos;
-	index = kws_strstr(curr, len-*pos, "\r\n", 2);
-	if (index >= 0) {
-		line.pstart = curr;
-		line.len = index;
-		*pos += (index + 2);
-	} else {
-		line.pstart = curr;
-		line.len = -1;
-		*pos = len;
+	if (nparsed != request->len) {
+		//ERR("HTTP request parse failed");
+		request->status = BADREQUEST;
+		return -1;
 	}
-	return line;
-}
 
-struct kws_field {
-	struct kws_string key;
-	struct kws_string value;
-};
-
-struct kws_string kws_trim(struct kws_string string) {
-	return string;
-}
-
-struct kws_field kws_get_field(struct kws_string line)
-{
-	int index;
-	struct kws_string key, value;
-	struct kws_field field;
-	index = kws_strch(line, ':');
-
-	key.pstart = line.pstart;
-	key.len = index;
-
-	value.pstart = line.pstart + index + 1;
-	value.len = line.len - key.len - 1;
-
-	field.key = key;
-	field.value = value;
-
-	return field;
-}
-
-void kws_http_parse(struct kws_request *request)
-{
-	char *mem;
-	int pos;
-	kws_string line;
-	kws_field field;
-	INFO("Enter kws_http_parse");
-	while ((line = kws_getline(request->mem, &pos, request->len)).len > 0) {
-		field = kws_get_field(line);
-		kws_hash_add(request->fields, field.key, field.value);
-	}
-	INFO("Leave kws_http_parse");
+	return 0;
 }

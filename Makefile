@@ -1,7 +1,7 @@
 TARGET=kws
 
 obj-m += ${TARGET}.o
-${TARGET}-objs := init.o master.o worker.o socket.o queue.o request.o
+${TARGET}-objs := init.o master.o worker.o socket.o queue.o request.o parse.o http_parser.o
 
 BUILD=/lib/modules/$(shell uname -r)/build
 

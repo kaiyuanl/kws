@@ -13,6 +13,8 @@
 #include <linux/hashtable.h>
 #include <net/sock.h>
 
+#include "http_parser.h"
+
 #define BACKLOG 64
 #define REQ_QUEUE_SIZE 1024
 #define REQ_MEM_SIZE 2048
@@ -24,6 +26,7 @@
 #define DONE 2		/* Finish read data from socket */
 #define REUSE 3
 #define REUSEDONE 4
+#define BADREQUEST 5
 
 #define INLINE 0
 #define OUTLINE 1
@@ -41,6 +44,14 @@ extern int KwsStatus;
 #define RESTART	1
 #define STOP	2
 #define EXIT	3
+
+/* HTTP methods */
+#define NOSUPPORT 0
+#define GET 1
+#define POST 2
+#define PUT 3
+#define DELETE 4
+
 
 extern int CPU;
 extern int ListeningPort;
@@ -60,14 +71,12 @@ struct kws_request {
 	int status;
 	char *mem;
 	size_t size;
+	size_t old_len;
 	size_t len;
 	size_t should_read;
+	size_t bound;
 
-	int persistent;
-	size_t content_length;
-	int pos;
-
-	hlist_head fields;
+	http_parser *parser;
 };
 
 struct kws_queue {
@@ -107,12 +116,13 @@ void kws_request_queue_release(struct kws_queue *queue);
 
 struct kws_request *kws_request_alloc(void);
 void kws_request_release(struct kws_request *request);
+int kws_request_timeout(struct kws_request *request);
 
 unsigned int kws_hash(struct kws_string str);
 void kws_hash_add(struct hlist_head fields[], int bkt, struct kws_string field);
 struct kws_string kws_hash_get(struct hlist_head fields[], int bkt, char *field);
 
 int kws_strstr(char *s1, int l1, char *s2, int l2);
-void kws_http_parse(struct kws_request *request);
+int kws_http_parse(struct kws_request *request);
 
 #endif

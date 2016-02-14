@@ -86,7 +86,7 @@ static void kws_exit(void)
 	INFO("Release listening socket");
 	kws_sock_release(ListeningSocket);
 	INFO("Leave kws_exit");
-	INFO("---------------Exit Web Server---------------\n")
+	INFO("---------------Exit Web Server---------------\n");
 }
 
 module_init(kws_init);
