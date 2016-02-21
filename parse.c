@@ -19,10 +19,10 @@ int kws_http_parse(struct kws_request *request)
 	size_t nparsed;
 	http_parser_settings settings;
 	http_parser_init(request->parser, HTTP_REQUEST);
-	nparsed = http_parser_execute(request->parser, &settings, request->mem, request->len);
+	nparsed = http_parser_execute(request->parser, &settings, request->mem, request->bound);
 
 	if (nparsed != request->len) {
-		//ERR("HTTP request parse failed");
+		ERR("HTTP request parse failed");
 		request->status = BADREQUEST;
 		return -1;
 	}

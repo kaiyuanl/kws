@@ -47,7 +47,6 @@ int kws_queue_in(struct kws_queue *queue, void *item)
 	(queue->in)++;
 	(queue->count)++;
 	spin_unlock(&(queue->lock));
-	printk(KERN_ALERT "Enqueue:  in is %d, out is %d\n", queue->in, queue->out);
 	return 0;
 }
 
@@ -66,7 +65,6 @@ void *kws_queue_out(struct kws_queue *queue)
 	queue->items[(queue->out)%(queue->size)] = NULL;
 	(queue->out)++;
 	(queue->count)--;
-	printk(KERN_ALERT "Dequeue: in is %d, out is %d\n", queue->in, queue->out);
 	spin_unlock(&(queue->lock));
 	return item;
 }

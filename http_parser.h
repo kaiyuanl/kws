@@ -149,7 +149,7 @@ enum header_states
   , h_matching_upgrade
 
   , h_connection
-  , h_content_length
+  , h_content_length = 10
   , h_transfer_encoding
   , h_upgrade
 
@@ -161,7 +161,7 @@ enum header_states
   , h_matching_connection_token
 
   , h_transfer_encoding_chunked
-  , h_connection_keep_alive
+  , h_connection_keep_alive = 20
   , h_connection_close
   , h_connection_upgrade
   };

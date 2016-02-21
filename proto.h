@@ -11,6 +11,7 @@
 #include <linux/spinlock.h>
 #include <linux/cpumask.h>
 #include <linux/hashtable.h>
+#include <linux/jiffies.h>
 #include <net/sock.h>
 
 #include "http_parser.h"
@@ -23,15 +24,14 @@
 #define OLD -1		/* Lagency structure, will be reclaimed to cache */
 #define NEW 0		/* New connection */
 #define READING 1	/* Reading data from socket*/
-#define DONE 2		/* Finish read data from socket */
-#define REUSE 3
-#define REUSEDONE 4
-#define BADREQUEST 5
+#define READDONE 2	/* Finish read data from socket*/
+#define REUSE 3		/* HTTP connection is keep-alive */
+#define REUSEDONE 4	/* Finish read a request for reuse connection*/
+#define BADREQUEST 5	/* Bad HTTP request*/
+#define REQTIMEOUT 6
+#define REUSECLOSE 7
 
-#define INLINE 0
-#define OUTLINE 1
-
-#define INFO(x, ...)     printk(KERN_ALERT x"\n", ##__VA_ARGS__)
+#define INFO(x, ...)     printk(KERN_DEBUG x"\n", ##__VA_ARGS__)
 
 #ifdef KWS_DEBUG
 #define ERR(x,...)      printk(KERN_ALERT x"at %s line %i\n", ##__VA_ARGS__ ,__FILE__,__LINE__)
@@ -52,6 +52,12 @@ extern int KwsStatus;
 #define PUT 3
 #define DELETE 4
 
+#define NONE -1
+
+#define TIMEOUT -1
+#define TIMEIN 0
+#define REQUEST_TIMEOUT (HZ * 20)
+
 
 extern int CPU;
 extern int ListeningPort;
@@ -68,13 +74,14 @@ struct kws_string {
 
 struct kws_request {
 	struct socket *sock;
+	unsigned long create_time;
 	int status;
 	char *mem;
-	size_t size;
-	size_t old_len;
-	size_t len;
-	size_t should_read;
-	size_t bound;
+	int size;
+	int old_len;
+	int len;
+	int should_read;
+	int bound;
 
 	http_parser *parser;
 };
@@ -90,6 +97,7 @@ struct kws_queue {
 };
 
 extern struct kws_queue *RequestQueue;
+extern struct kws_queue *ResponseQueue;
 
 int kws_master(void *none);
 int kws_worker(void *none);
@@ -116,6 +124,8 @@ void kws_request_queue_release(struct kws_queue *queue);
 
 struct kws_request *kws_request_alloc(void);
 void kws_request_release(struct kws_request *request);
+void kws_bad_request_handle(struct kws_request *request);
+void kws_http_request_handle(struct kws_request *request);
 int kws_request_timeout(struct kws_request *request);
 
 unsigned int kws_hash(struct kws_string str);

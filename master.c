@@ -49,10 +49,6 @@ int kws_master(void *none)
 	while(KwsStatus != EXIT) {
 
 		new_sock = kws_accept(ListeningSocket);
-		if (KwsStatus == EXIT) {
-			INFO("Get EXIT Status in master");
-			return 0;
-		}
 
 		if (new_sock == NULL)
 			continue;
@@ -65,6 +61,7 @@ int kws_master(void *none)
 		}
 
 		request->sock = new_sock;
+		request->create_time = jiffies;
 
 		while (kws_request_queue_in(RequestQueue, request) < 0) {
 			if (KwsStatus == EXIT) {

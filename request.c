@@ -29,9 +29,15 @@ struct kws_request *kws_request_alloc(void)
 	request->size = REQ_MEM_SIZE;
 	request->len = 0;
 	request->old_len = 0;
+	request->bound = 0;
 	request->should_read = 0;
 
 	request->parser = (http_parser *)kmalloc(sizeof(http_parser), GFP_KERNEL);
+	if (request->parser == NULL) {
+		ERR("Allocate memory for HTTP parser failed");
+		kfree(request);
+		return NULL;
+	}
 
 	INFO("Leave kws_request_alloc");
 	return request;
@@ -58,13 +64,42 @@ void kws_request_release(struct kws_request *request)
 	INFO("Leave kws_request_release");
 }
 
+void kws_bad_request_handle(struct kws_request *request)
+{
+	switch(request->status) {
+	case REQTIMEOUT:
+		break;
+	case BADREQUEST:
+		break;
+	case REUSECLOSE:
+		break;
+	default:
+		break;
+	}
+}
+
 void kws_http_request_handle(struct kws_request *request)
 {
-
+	if (request == NULL) {
+		ERR("Parameter is NULL");
+		return;
+	}
+	INFO("-----HTTP request-----");
+	INFO("%s", request->mem);
+	INFO("----------------------");
 }
 
 int kws_request_timeout(struct kws_request *request)
 {
-	return 0;
+	if (request == NULL) {
+		ERR("Parameter is NULL");
+		return TIMEOUT;
+	}
+	if (request->create_time < jiffies - REQUEST_TIMEOUT) {
+		INFO("Request timeout");
+		return TIMEOUT;
+	} else {
+		return TIMEIN;
+	}
 }
 
