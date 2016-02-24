@@ -31,10 +31,21 @@ struct kws_request *kws_request_alloc(void)
 	request->old_len = 0;
 	request->bound = 0;
 	request->should_read = 0;
+	request->parser = NULL;
+
+	request->mem = (char *)kmalloc(request->size, GFP_KERNEL);
+	if (request->mem == NULL)
+	{
+		ERR("Allocate for request->mem failed");
+		kws_request_queue_in(RequestQueue, request);
+		kfree(request);
+		return NULL;
+	}
 
 	request->parser = (http_parser *)kmalloc(sizeof(http_parser), GFP_KERNEL);
 	if (request->parser == NULL) {
 		ERR("Allocate memory for HTTP parser failed");
+		kfree(request->mem);
 		kfree(request);
 		return NULL;
 	}

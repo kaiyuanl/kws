@@ -14,8 +14,6 @@
 #include <linux/jiffies.h>
 #include <net/sock.h>
 
-#include "http_parser.h"
-
 #define BACKLOG 64
 #define REQ_QUEUE_SIZE 1024
 #define REQ_MEM_SIZE 2048
@@ -67,24 +65,44 @@ extern struct task_struct **Workers;
 extern int WorkerNum;
 extern size_t MemSize;
 
-struct kws_string {
+/* String struct in kws.
+ * pstart != NULL && len > 0:		valid string
+ * pstart != NULL && len == 0:		zero-length string
+ * pstart == NULL && len == 0:		null
+ * other case:				invalid string
+ */
+typedef struct kws_string {
 	char *pstart;
 	size_t len;
-};
+} kws_string;
 
-struct kws_request {
+#define INVALID_STR(str) (!((str).pstart) || ((str).len <= 0))
+#define NULL_STR { .pstart = NULL, .len = -1 }
+
+typedef struct kws_field_kv {
+	/*If line doesn't contain http field key-value, set errno to -1*/
+	int errno;
+	kws_string key;
+	kws_string value;
+	struct list_head list;
+} kws_field_kv;
+
+typedef struct kws_request {
 	struct socket *sock;
 	unsigned long create_time;
+	int method;
+	int http_version;
 	int status;
 	char *mem;
 	int size;
-	int old_len;
 	int len;
 	int should_read;
 	int bound;
 
-	http_parser *parser;
-};
+	char *err_msg;
+
+	kws_field_kv fields;
+} kws_request;
 
 struct kws_queue {
 	spinlock_t lock;
