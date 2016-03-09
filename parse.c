@@ -308,7 +308,7 @@ kws_string kws_field_find(kws_request *request, char *field, size_t len)
 	return none;
 }
 
-#define NONDIGIT -1
+#define NOINTSTR -1
 #define INTOVERFLOW -2
 
 /*
@@ -317,26 +317,33 @@ kws_string kws_field_find(kws_request *request, char *field, size_t len)
  * Any non-digit will lead to reture NONDIGIT
  * Integer overflow will lead to return INTOVERFLOW
  */
-int kws_atoui(kws_string str)
-{
+int kws_atoui(kws_string str) {
 	char *c, *end;
-	int sum;
+	int result, digit;
 
-	sum = 0;
+	if (INVALID_STR(str)) {
+		return NOINTSTR;
+	}
+
 	c = str.pstart;
 	end = str.pstart + str.len;
+	while (*c == ' ')
+		c++;
+
+	result = 0;
 	while (c < end) {
 		if ('0' <= *c && *c <= '9') {
-			sum += (*c - '0');
-			if (sum > INT_MAX / 10) {
-				return INTOVERFLOW;
-			}
-			sum *= 10;
+			digit = *c - '0';
+			if( result > (INT_MAX - digit) /10 ) {
+                return INTOVERFLOW;
+            }
+			result = result * 10 + digit;
+			c++;
 		} else {
-			return NONDIGIT;
+			return NOINTSTR;
 		}
 	}
-	return sum;
+	return result;
 }
 
 int kws_http_ver11_field_handle(kws_request *request)
@@ -368,17 +375,14 @@ int kws_http_ver11_field_handle(kws_request *request)
 		/* HTTP/1.1 default enable persistent connection
 		 *if no explict define
 		 */
-		if (request->content_length == NONE) {
-
-		}
-
+		request->connection = KEEPALIVE;
 	} else {
 		if (kws_strcmp(connection, "Close", 5)) {
-
+			request->connection = CLOSE;
 		}
 
 		if (kws_strcmp(connection, "Keep-Alive", 10)) {
-
+			request->connection = KEEPALIVE;
 		}
 	}
 }

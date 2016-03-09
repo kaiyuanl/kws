@@ -41,7 +41,7 @@ static int kws_init(void)
 		ERR("Create master thread failed\n");
 	}
 	Master = master;
-
+	kws_task_handler = &kws_http_request_handle;
 	INFO("Leave kws_init");
 
 	return 0;

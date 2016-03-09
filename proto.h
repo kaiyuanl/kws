@@ -29,12 +29,12 @@
 #define REQTIMEOUT 6
 #define REUSECLOSE 7
 
-#define INFO(x, ...)     printk(KERN_DEBUG x"\n", ##__VA_ARGS__)
+#define INFO(x, ...)  printk(KERN_DEBUG x"\n", ##__VA_ARGS__)
 
 #ifdef KWS_DEBUG
-#define ERR(x,...)      printk(KERN_ALERT x"at %s line %i\n", ##__VA_ARGS__ ,__FILE__,__LINE__)
+#define ERR(x,...)  printk(KERN_ALERT x"at %s line %i\n", ##__VA_ARGS__ ,__FILE__,__LINE__)
 #else
-#define ERR(x,...)      do {} while (0)
+#define ERR(x,...)  do {} while (0)
 #endif
 
 extern int KwsStatus;
@@ -114,8 +114,25 @@ struct kws_queue {
 	void **items;
 };
 
+struct kws_pool_task {
+	struct task_struct *task;
+	void (*task_handler)(void *param);
+	void *task_param;
+	int status;
+	struct list_head list;
+};
+
+extern void (*kws_task_handler)(void *param);
+
+struct kws_pool {
+	spinlock_t lock;
+	struct kws_pool_task task;
+	int size;
+};
+
 extern struct kws_queue *RequestQueue;
 extern struct kws_queue *ResponseQueue;
+extern struct kws_pool *ThreadPool;
 
 int kws_master(void *none);
 int kws_worker(void *none);

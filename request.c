@@ -89,17 +89,6 @@ void kws_bad_request_handle(struct kws_request *request)
 	}
 }
 
-void kws_http_request_handle(struct kws_request *request)
-{
-	if (request == NULL) {
-		ERR("Parameter is NULL");
-		return;
-	}
-	INFO("-----HTTP request-----");
-	INFO("%s", request->mem);
-	INFO("----------------------");
-}
-
 int kws_request_timeout(struct kws_request *request)
 {
 	if (request == NULL) {
@@ -114,3 +103,14 @@ int kws_request_timeout(struct kws_request *request)
 	}
 }
 
+void kws_http_request_handle(struct kws_request *request)
+{
+	if (request == NULL) {
+		ERR("Parameter is NULL");
+		return;
+	}
+	INFO("-----HTTP request-----");
+	INFO("%s", request->mem);
+	INFO("----------------------");
+	INFO("Handle this request in thread pool");
+}
