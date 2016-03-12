@@ -18,6 +18,7 @@ MODULE_PARM_DESC(status, "Running - 0\nRestart - 1\nStop - 2");
 
 int CPU;
 int WorkerNum;
+int PoolThreadNum;
 int KwsStatus;
 int ListeningPort;
 struct socket *ListeningSocket;
@@ -75,6 +76,11 @@ static void kws_exit(void)
 			}
 			INFO("Finish release worker");
 		}
+	}
+
+	INFO("Release pooler thread");
+	if (Pooler != NULL && kthread_stop(Pooler)) {
+		ERR("Stop pooler failed");
 	}
 
 	INFO("Release master thread");

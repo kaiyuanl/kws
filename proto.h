@@ -37,7 +37,6 @@
 #define ERR(x,...)  do {} while (0)
 #endif
 
-extern int KwsStatus;
 #define RUNNING 0
 #define RESTART	1
 #define STOP	2
@@ -51,15 +50,6 @@ extern int KwsStatus;
 #define TIMEOUT -1
 #define TIMEIN 0
 #define REQUEST_TIMEOUT (HZ * 20)
-
-
-extern int CPU;
-extern int ListeningPort;
-extern struct socket *ListeningSocket;
-extern struct task_struct *Master;
-extern struct task_struct **Workers;
-extern int WorkerNum;
-extern size_t MemSize;
 
 /* String struct in kws.
  * pstart != NULL && len > 0:		valid string
@@ -122,21 +112,33 @@ struct kws_pool_task {
 	struct list_head list;
 };
 
-#define INIT 0x00
-#define NEWTASK 0x01
-#define TASKDONE 0x02
-
-extern void (*kws_task_handler)(void *data);
+#define INIT		0x00
+#define NEWTASK		0x01
+#define TASKDONE	0x02
 
 struct kws_pool {
 	spinlock_t lock;
-	struct kws_pool_task task;
+	struct kws_pool_task tasks;
 	int size;
 };
 
+extern int KwsStatus;
+
+extern int CPU;
+extern int ListeningPort;
+extern struct socket *ListeningSocket;
+extern struct task_struct *Master;
+extern struct task_struct **Workers;
+extern struct task_struct *Pooler;
+extern int WorkerNum;
+extern int PoolThreadNum;
+extern size_t MemSize;
+
 extern struct kws_queue *RequestQueue;
-extern struct kws_queue *DoneRequesteQueue;
+extern struct kws_queue *DoneRequestQueue;
 extern struct kws_pool *ThreadPool;
+
+extern void (*kws_task_handler)(void *data);
 
 int kws_master(void *none);
 int kws_worker(void *none);
@@ -167,13 +169,11 @@ void kws_bad_request_handle(struct kws_request *request);
 void kws_http_request_handle(void *data);
 int kws_request_timeout(struct kws_request *request);
 
-unsigned int kws_hash(struct kws_string str);
-void kws_hash_add(struct hlist_head fields[], int bkt, struct kws_string field);
-struct kws_string kws_hash_get(struct hlist_head fields[], int bkt, char *field);
 
 int kws_strstr(char *s1, int l1, char *s2, int l2);
 int kws_http_parse(struct kws_request *request, size_t read_len);
 
+int kws_task_pool_init(struct kws_pool **pool, size_t size);
 int kws_pooler(void *none);
 
 #endif

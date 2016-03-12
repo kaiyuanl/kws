@@ -3,6 +3,7 @@
 struct kws_queue *RequestQueue;
 struct kws_queue *DoneRequestQueue;
 struct task_struct **Workers;
+struct task_struct *Pooler;
 
 int kws_master(void *none)
 {
@@ -36,6 +37,10 @@ int kws_master(void *none)
 		return -1;
 	}
 
+	if (kws_task_pool_init(&ThreadPool, PoolThreadNum) < 0) {
+		return -1;
+	}
+
 	Workers = (struct task_struct **)kmalloc(WorkerNum * sizeof(struct task_struct *), GFP_KERNEL);
 	if (Workers == NULL)
 		return -1;
@@ -51,6 +56,8 @@ int kws_master(void *none)
 			ERR("Create worker thread failed");
 		}
 	}
+
+	Pooler = kthread_run(&kws_pooler, NULL, "kws pooler thread");
 
 	while(KwsStatus != EXIT) {
 

@@ -413,7 +413,7 @@ static int kws_http_ver09_field_handle(kws_request *request)
  *     = 0 : HTTP header is incomplete, wait next parse
  *     < 0 : HTTP header is invalid, this request is bad
  */
-int kws_http_parse(kws_request *request, size_t read_len)
+int kws_http_parse(struct kws_request *request, size_t read_len)
 {
 	int version;
 	int pos;
