@@ -23,6 +23,7 @@ int ListeningPort;
 struct socket *ListeningSocket;
 struct task_struct *Master;
 size_t MemSize;
+struct kws_pool *ThreadPool;
 
 
 static int kws_init(void)

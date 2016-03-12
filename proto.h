@@ -122,6 +122,10 @@ struct kws_pool_task {
 	struct list_head list;
 };
 
+#define INIT 0x00
+#define NEWTASK 0x01
+#define TASKDONE 0x02
+
 extern void (*kws_task_handler)(void *param);
 
 struct kws_pool {
@@ -131,7 +135,7 @@ struct kws_pool {
 };
 
 extern struct kws_queue *RequestQueue;
-extern struct kws_queue *ResponseQueue;
+extern struct kws_queue *DoneRequesteQueue;
 extern struct kws_pool *ThreadPool;
 
 int kws_master(void *none);
@@ -169,5 +173,7 @@ struct kws_string kws_hash_get(struct hlist_head fields[], int bkt, char *field)
 
 int kws_strstr(char *s1, int l1, char *s2, int l2);
 int kws_http_parse(struct kws_request *request);
+
+int kws_pooler(void *none);
 
 #endif

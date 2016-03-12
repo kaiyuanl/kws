@@ -1,6 +1,7 @@
 #include "proto.h"
 
 struct kws_queue *RequestQueue;
+struct kws_queue *DoneRequestQueue;
 struct task_struct **Workers;
 
 int kws_master(void *none)
@@ -27,6 +28,11 @@ int kws_master(void *none)
 
 	RequestQueue = kws_request_queue_alloc(REQ_QUEUE_SIZE);
 	if (RequestQueue == NULL) {
+		return -1;
+	}
+
+	DoneRequestQueue = kws_request_alloc(REQ_QUEUE_SIZE);
+	if (DoneRequestQueue == NULL) {
 		return -1;
 	}
 

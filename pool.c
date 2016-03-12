@@ -1,6 +1,6 @@
 #include "proto.h"
 
-int kws_pool_worker(void *param)
+static int kws_pool_worker(void *param)
 {
 	struct kws_pool_task *pool_task;
 	struct kws_request *request;
@@ -21,9 +21,11 @@ int kws_pool_worker(void *param)
 	while(KwsStatus != EXIT) {
 		if (pool_task != NULL && pool_task->status == NEWTASK){
 			request = (struct kws_request *)(pool_task->task_param);
-			(pool_task->task_handler)(request);
+			if (pool_task->task_handler) {
+				(pool_task->task_handler)(request);
+			}
 			pool_task->status = TASKDONE;
-			continue;
+			kws_task_pool_return(pool_task);
 		}
 
 		if (pool_task != NULL && pool_task->status == TASKDONE) {
@@ -32,7 +34,7 @@ int kws_pool_worker(void *param)
 	}
 }
 
-struct kws_pool_task *kws_pool_task_alloc(void)
+static struct kws_pool_task *kws_pool_task_alloc(void)
 {
 	struct kws_pool_task pool_task;
 	struct task_struct task;
@@ -56,7 +58,7 @@ struct kws_pool_task *kws_pool_task_alloc(void)
 	return pool_task;
 }
 
-int kws_task_pool_init(struct kws_pool **pool, size_t size);
+static int kws_task_pool_init(struct kws_pool **pool, size_t size);
 {
 	struct kws_pool_task *pool_task;
 	int i;
@@ -82,20 +84,41 @@ int kws_task_pool_init(struct kws_pool **pool, size_t size);
 	return 0;
 }
 
-struct kws_pool_task *kws_task_pool_pickup(struct kws_pool *pool)
+static struct kws_pool_task *kws_task_pool_pickup(struct kws_pool *pool)
 {
+	struct kws_pool_task *pool_task;
+	struct list_head first;
+
 	spin_lock(&(pool->lock));
 	if (pool->size == 0) {
-
+		spin_unlock(&(pool->lock));
+		pool_task = kws_pool_task_alloc();
+		return pool_task;
 	} else if (pool->size > 0) {
-
+		first = pool->list.next;
+		list_del(first);
+		pool_task = container_of(first, struct kws_pool_task, list);
+		spin_unlock(&(pool->lock));
+		return pool_task;
 	} else {
 		ERR("Should never happen");
+		return NULL;
 	}
+	spin_unlock(&(pool->lock));
+	return NULL;
+}
+
+static void kws_task_pool_return(struct kws_pool *pool, struct kws_pool_task *pool_task)
+{
+	if (!pool_task) {
+		return;
+	}
+	spin_lock(&(pool->lock));
+	list_add(&(pool_task->list), &((*pool)->tasks.list));
 	spin_unlock(&(pool->lock));
 }
 
-int kws_task_pool_handle(void *task_param)
+static int kws_task_pool_handle(void *task_param)
 {
 	struct kws_pool_task *pool_task;
 	pool_task = kws_task_pool_pickup(ThreadPool);
@@ -106,5 +129,30 @@ int kws_task_pool_handle(void *task_param)
 	pool_task->task_param = task_param;
 	pool_task->status = NEWTASK;
 	wake_up_process(pool_task->task);
+	return 0;
+}
+
+/* Thread that handles done request */
+int kws_pooler(void *none)
+{
+	struct kws_request *request;
+	struct kws_pool_task *pool_task;
+	int times;
+
+	INFO("Enter kws_pooler");
+	times = 10;
+	while (KwsStatus != EXIT) {
+		request = kws_request_queue_out(DoneRequestQueue);
+		if (!request) {
+			times--;
+			if (times) {
+				times = 10;
+				schedule();
+			}
+			continue;
+		}
+		ret = kws_task_pool_handle((void *)request);
+	}
+	INFO("Leave kws_pooler");
 	return 0;
 }

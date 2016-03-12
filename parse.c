@@ -235,7 +235,7 @@ int kws_header_parse(struct kws_request *request)
 			return -1;
 	}
 
-	url = kws_http_url(&line));
+	url = kws_http_url(&line);
 	if (INVALID_STR(url)) {
 		request->status = BADREQUEST;
 		request->err_msg = "Request URL invalid";
