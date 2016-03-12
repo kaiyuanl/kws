@@ -24,6 +24,7 @@ struct socket *ListeningSocket;
 struct task_struct *Master;
 size_t MemSize;
 struct kws_pool *ThreadPool;
+void (*kws_task_handler)(void *data);
 
 
 static int kws_init(void)

@@ -295,7 +295,8 @@ kws_string kws_field_find(kws_request *request, char *field, size_t len)
 	kws_string none;
 
 	if (request == NULL || field == NULL || len == 0) {
-		none = NULL_STR;
+		none.pstart = NULL;
+		none.len = 0;
 		return none;
 	}
 	list_for_each_entry(kv, &(request->fields.list), list)
@@ -304,12 +305,10 @@ kws_string kws_field_find(kws_request *request, char *field, size_t len)
 			return kv->value;
 		}
 	}
-	none = NULL_STR;
+	none.pstart = NULL;
+	none.len = 0;
 	return none;
 }
-
-#define NOINTSTR -1
-#define INTOVERFLOW -2
 
 /*
  * Convert string to positive integer
@@ -346,7 +345,7 @@ int kws_atoui(kws_string str) {
 	return result;
 }
 
-int kws_http_ver11_field_handle(kws_request *request)
+static int kws_http_ver11_field_handle(kws_request *request)
 {
 	kws_string connection, content_length;
 	size_t i_content_length;
@@ -354,8 +353,8 @@ int kws_http_ver11_field_handle(kws_request *request)
 	content_length = kws_field_find(request, "Content-Length", 14);
 
 	if (!INVALID_STR(content_length)) {
-		i_content_length = kws_atoi(content_length);
-		if (i_content_length == NONDIGIT) {
+		i_content_length = kws_atoui(content_length);
+		if (i_content_length == NOINTSTR) {
 			request->status = BADREQUEST;
 			request->err_msg = "Content-Length invalid";
 			return -1;
@@ -376,19 +375,21 @@ int kws_http_ver11_field_handle(kws_request *request)
 		 *if no explict define
 		 */
 		request->connection = KEEPALIVE;
+		return 0;
 	} else {
-		if (kws_strcmp(connection, "Close", 5)) {
+		if (kws_strcmp(connection, "Close", 5) == 0) {
 			request->connection = CLOSE;
 		}
 
-		if (kws_strcmp(connection, "Keep-Alive", 10)) {
+		if (kws_strcmp(connection, "Keep-Alive", 10) == 0) {
 			request->connection = KEEPALIVE;
 		}
+		return 0;
 	}
 }
 
 /* No implemention */
-int kws_http_ver10_field_handle(kws_request *request)
+static int kws_http_ver10_field_handle(kws_request *request)
 {
 	request->status = BADREQUEST;
 	request->err_msg = "Sorry, HTTP/1.0 no support";
@@ -396,7 +397,7 @@ int kws_http_ver10_field_handle(kws_request *request)
 }
 
 /* No implementation */
-int kws_http_ver09_field_handle(kws_request *request)
+static int kws_http_ver09_field_handle(kws_request *request)
 {
 	request->status = BADREQUEST;
 	request->err_msg = "Sorry, HTTP/0.9 no support";
@@ -414,8 +415,8 @@ int kws_http_ver09_field_handle(kws_request *request)
  */
 int kws_http_parse(kws_request *request, size_t read_len)
 {
-	kws_string connection, length;
-	int result;
+	int version;
+	int pos;
 	if (request == NULL) {
 		return -1;
 	}

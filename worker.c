@@ -1,10 +1,11 @@
 #include "proto.h"
+#include "http.h"
 
 int kws_worker(void *none)
 {
 	struct kws_request *request;
 	int len;
-	int pos;
+	int parse_status;
 
 	INFO("Enter kws_worker\n");
 
@@ -80,7 +81,7 @@ int kws_worker(void *none)
 			} else { /* len = 0, client socket has been closed. */
 				request->mem[request->len] = '\0';
 				if (request->bound > 0) {
-					request->status = READINGDONE;
+					request->status = READDONE;
 					kws_http_request_handle(request);
 				} else {
 					request->status = BADREQUEST;

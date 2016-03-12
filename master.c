@@ -31,7 +31,7 @@ int kws_master(void *none)
 		return -1;
 	}
 
-	DoneRequestQueue = kws_request_alloc(REQ_QUEUE_SIZE);
+	DoneRequestQueue = kws_request_queue_alloc(REQ_QUEUE_SIZE);
 	if (DoneRequestQueue == NULL) {
 		return -1;
 	}

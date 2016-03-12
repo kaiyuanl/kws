@@ -8,7 +8,7 @@
 
 #define HTTPVER11		11
 #define HTTPVER10		10
-#define HTTPVER09		09
+#define HTTPVER09		9
 
 /* HTTP fields */
 #define ACCEPT			"Accept"

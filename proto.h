@@ -43,14 +43,10 @@ extern int KwsStatus;
 #define STOP	2
 #define EXIT	3
 
-/* HTTP methods */
-#define NOSUPPORT 0
-#define GET 1
-#define POST 2
-#define PUT 3
-#define DELETE 4
-
 #define NONE -1
+#define NONDIGIT -1
+#define INTOVERFLOW -1
+#define NOINTSTR -2
 
 #define TIMEOUT -1
 #define TIMEIN 0
@@ -77,7 +73,7 @@ typedef struct kws_string {
 } kws_string;
 
 #define INVALID_STR(str) (!((str).pstart) || ((str).len <= 0))
-#define NULL_STR { .pstart = NULL, .len = -1 }
+#define NULL_STR  { .pstart = NULL, .len = -1 };
 
 typedef struct kws_field_kv {
 	/*If line doesn't contain http field key-value, set errno to -1*/
@@ -99,9 +95,13 @@ typedef struct kws_request {
 	int should_read;
 	int bound;
 
-	char *err_msg;
+	int connection;
+	int content_length;
 
-	kws_field_kv fields;
+	int response_code;
+	char *err_msg;
+	struct kws_string url;
+	struct kws_field_kv fields;
 } kws_request;
 
 struct kws_queue {
@@ -116,7 +116,7 @@ struct kws_queue {
 
 struct kws_pool_task {
 	struct task_struct *task;
-	void (*task_handler)(void *param);
+	void (*task_handler)(void *data);
 	void *task_param;
 	int status;
 	struct list_head list;
@@ -126,7 +126,7 @@ struct kws_pool_task {
 #define NEWTASK 0x01
 #define TASKDONE 0x02
 
-extern void (*kws_task_handler)(void *param);
+extern void (*kws_task_handler)(void *data);
 
 struct kws_pool {
 	spinlock_t lock;
@@ -164,7 +164,7 @@ void kws_request_queue_release(struct kws_queue *queue);
 struct kws_request *kws_request_alloc(void);
 void kws_request_release(struct kws_request *request);
 void kws_bad_request_handle(struct kws_request *request);
-void kws_http_request_handle(struct kws_request *request);
+void kws_http_request_handle(void *data);
 int kws_request_timeout(struct kws_request *request);
 
 unsigned int kws_hash(struct kws_string str);
@@ -172,7 +172,7 @@ void kws_hash_add(struct hlist_head fields[], int bkt, struct kws_string field);
 struct kws_string kws_hash_get(struct hlist_head fields[], int bkt, char *field);
 
 int kws_strstr(char *s1, int l1, char *s2, int l2);
-int kws_http_parse(struct kws_request *request);
+int kws_http_parse(struct kws_request *request, size_t read_len);
 
 int kws_pooler(void *none);
 
