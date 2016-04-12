@@ -30,6 +30,8 @@ struct kws_request *kws_request_alloc(void)
 	request->len = 0;
 	request->bound = 0;
 	request->should_read = 0;
+	request->connection = KEEPALIVE;
+	request->content_length = NONE;
 
 	request->mem = (char *)kmalloc(request->size, GFP_KERNEL);
 	if (request->mem == NULL)
@@ -75,6 +77,7 @@ void kws_bad_request_handle(struct kws_request *request)
 	default:
 		break;
 	}
+	kws_request_release(request);
 }
 
 int kws_request_timeout(struct kws_request *request)

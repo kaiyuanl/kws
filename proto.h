@@ -49,7 +49,7 @@
 
 #define TIMEOUT -1
 #define TIMEIN 0
-#define REQUEST_TIMEOUT (HZ * 20)
+#define REQUEST_TIMEOUT (HZ * 1 / 200)
 
 /* String struct in kws.
  * pstart != NULL && len > 0:		valid string

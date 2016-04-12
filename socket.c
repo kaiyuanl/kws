@@ -105,11 +105,10 @@ int kws_sock_read(struct socket *sock, char *buff, size_t len)
 		.msg_flags = MSG_DONTWAIT
 	};
 
-	INFO("Enter kws_sock_read, len is %d", (int)len);
-	INFO("size_t = %lu", len);
+	//INFO("Enter kws_sock_read, len is %d", (int)len);
 
 	rlen = kernel_recvmsg(sock, &msg, &vec, 1, len, MSG_DONTWAIT);
-	INFO("Leave kws_sock_read, return %d", rlen);
+	//INFO("Leave kws_sock_read, return %d", rlen);
 
 	return rlen;
 }
