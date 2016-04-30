@@ -1,5 +1,5 @@
 #include "proto.h"
-
+#include "http.h"
 void kws_request_cleanup(struct kws_request *request)
 {
 	if (request == NULL)

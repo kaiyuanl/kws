@@ -420,6 +420,7 @@ int kws_http_parse(struct kws_request *request, size_t read_len)
 	if (request == NULL) {
 		return -1;
 	}
+
 	/* -4 covers the case in which previous end of mem drops in range of \r\n\r\n*/
 	pos = kws_str_search(request->mem + request->len - 4, read_len + 4, "\r\n\r\n", 4);
 	if (pos < 0) {

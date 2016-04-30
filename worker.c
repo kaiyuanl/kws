@@ -6,6 +6,7 @@ int kws_worker(void *none)
 	struct kws_request *request;
 	int len;
 	int parse_status;
+	int tmp;
 
 	INFO("Enter kws_worker\n");
 
@@ -65,9 +66,18 @@ int kws_worker(void *none)
 				} else if (parse_status > 0) {
 					if (request->connection == KEEPALIVE && request->content_length > 0) {
 						request->len += len;
-						request->should_read =
+						tmp =
 							request->content_length
 							- (request->len - (request->bound + 2));
+
+						if (tmp > 0) {
+							request->should_read = tmp;
+						} else {
+							request->should_read = 0;
+							request->mem[request->len] = '\0';
+							kws_http_request_handle(request);
+							continue;
+						}
 
 					} else if (request->connection == KEEPALIVE && request->content_length == NONE) {
 						request->mem[request->bound + 2] = '\0';

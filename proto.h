@@ -12,6 +12,7 @@
 #include <linux/cpumask.h>
 #include <linux/hashtable.h>
 #include <linux/jiffies.h>
+#include <linux/delay.h>
 #include <net/sock.h>
 
 #define BACKLOG 64
