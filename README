@@ -1,6 +1,6 @@
 Kaiyuan's Web Server, or Kernel-based Web Server
 
-Kws is a personal experimental project to build high performance HTTP server. The first idea of kws origined from kvm (Kernel-based Virtual Machine). Integrating web server into kernel try to solve performance, but also raise some issues.
+Kws is a personal experimental project to build high performance HTTP server. The initial idea of kws origined from kvm (Kernel-based Virtual Machine). Integrating web server into kernel tries to speedup performance, but also raise some issues.
 
 * Performance
 
