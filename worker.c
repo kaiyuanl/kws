@@ -6,7 +6,7 @@ int kws_worker(void *none)
 	struct kws_request *request;
 	int len;
 	int parse_status;
-	int tmp;
+	int should_read;
 
 	INFO("Enter kws_worker\n");
 
@@ -66,12 +66,12 @@ int kws_worker(void *none)
 				} else if (parse_status > 0) {
 					if (request->connection == KEEPALIVE && request->content_length > 0) {
 						request->len += len;
-						tmp =
+						should_read =
 							request->content_length
 							- (request->len - (request->bound + 2));
 
-						if (tmp > 0) {
-							request->should_read = tmp;
+						if (should_read > 0) {
+							request->should_read = should_read;
 						} else {
 							request->should_read = 0;
 							request->mem[request->len] = '\0';

@@ -231,14 +231,15 @@ int kws_header_parse(struct kws_request *request)
 		default:
 			request->method = method;
 			request->status = BADREQUEST;
-			request->err_msg = "Don't implement this HTTP method";
+			request->status_code = 405;
+			request->status_msg = MSG405;
 			return -1;
 	}
 
 	url = kws_http_url(&line);
 	if (INVALID_STR(url)) {
 		request->status = BADREQUEST;
-		request->err_msg = "Request URL invalid";
+		request->status_msg = "Request URL invalid";
 		return -1;
 	}
 
@@ -248,7 +249,8 @@ int kws_header_parse(struct kws_request *request)
 
 	if (version < 0) {
 		request->status = BADREQUEST;
-		request->err_msg = "HTTP version invalid or not support";
+		request->status_code = 505;
+		request->status_msg = MSG505;
 		return -1;
 	}
 
@@ -264,7 +266,8 @@ int kws_header_parse(struct kws_request *request)
 		*kv = kws_str_kv(line);
 		if (kv->errno == -1) {
 			request->status = BADREQUEST;
-			request->err_msg = "HTTP header contains invalid field";
+			request->status_code = 400;
+			request->status_msg = MSG400;
 			return -1;
 		}
 
@@ -356,13 +359,15 @@ static int kws_http_ver11_field_handle(kws_request *request)
 		i_content_length = kws_atoui(content_length);
 		if (i_content_length == NOINTSTR) {
 			request->status = BADREQUEST;
-			request->err_msg = "Content-Length invalid";
+			request->status_code = 400;
+			request->status_msg = "Content-Length invalid";
 			return -1;
 		}
 
 		if (i_content_length == INTOVERFLOW || i_content_length > request->size) {
 			request->status = BADREQUEST;
-			request->err_msg = "Content-Length too long";
+			request->status_code = 400;
+			request->status_msg = "Content-Length too long";
 			return -1;
 		}
 
@@ -392,7 +397,8 @@ static int kws_http_ver11_field_handle(kws_request *request)
 static int kws_http_ver10_field_handle(kws_request *request)
 {
 	request->status = BADREQUEST;
-	request->err_msg = "Sorry, HTTP/1.0 no support";
+	request->status_code = 505;
+	request->status_msg = MSG505;
 	return -1;
 }
 
@@ -400,7 +406,8 @@ static int kws_http_ver10_field_handle(kws_request *request)
 static int kws_http_ver09_field_handle(kws_request *request)
 {
 	request->status = BADREQUEST;
-	request->err_msg = "Sorry, HTTP/0.9 no support";
+	request->status_code = 505;
+	request->status_msg = MSG505;
 	return -1;
 }
 
@@ -448,7 +455,8 @@ int kws_http_parse(struct kws_request *request, size_t read_len)
 		}
 	} else {
 		request->status = BADREQUEST;
-		request->err_msg = "HTTP version invalid or not support";
+		request->status_code = 505;
+		request->status_msg = MSG505;
 		return -1;
 	}
 	return 1;

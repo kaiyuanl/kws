@@ -115,5 +115,16 @@ int kws_sock_read(struct socket *sock, char *buff, size_t len)
 
 int kws_sock_write(struct socket *sock, char *buff, size_t len)
 {
-	return 0;
+	int rlen;
+	struct kvec vec = {
+		.iov_len = len,
+		.iov_base = buff
+	};
+
+	struct msghdr msg = {
+		.msg_flags = MSG_DONTWAIT
+	};
+
+	rlen = kernel_sendmsg(sock, &msg, &vec, 1, len);
+	return rlen;
 }

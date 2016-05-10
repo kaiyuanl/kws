@@ -35,6 +35,7 @@ static int kws_pool_worker(void *param)
 				(pool_task->task_handler)(request);
 			}
 			pool_task->status = TASKDONE;
+			kws_request_release(request);
 			kws_task_pool_return(ThreadPool, pool_task);
 		}
 
@@ -140,19 +141,13 @@ static int kws_task_pool_handle(void *task_param)
 int kws_pooler(void *none)
 {
 	struct kws_request *request;
-	int times;
 	int ret;
 
 	INFO("Enter kws_pooler");
-	times = 10;
 	while (KwsStatus != EXIT) {
 		request = kws_request_queue_out(DoneRequestQueue);
 		if (!request) {
-			times--;
-			if (times) {
-				times = 10;
-				schedule();
-			}
+			schedule();
 			continue;
 		}
 		ret = kws_task_pool_handle((void *)request);

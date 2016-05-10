@@ -35,4 +35,31 @@
 #define KEEPALIVE		0x01
 #define CLOSE			0x02
 
+/* HTTP Status Codes */
+#define MSG200			"OK"
+#define MSG400			"Bad Request"
+#define MSG401			"Unarthorized"
+#define MSG403			"Forbidden"
+#define MSG404			"Not Found"
+#define MSG405			"Method Not Allowed"
+#define MSG500			"Internal Server Error"
+#define MSG501			"Not Implemented"
+#define MSG505			"HTTP Version Not Supported"
+
+#define HTTPRESP					\
+"HTTP/1.1 200 OK"					\
+"Date: Mon, 27 Jul 2009 12:28:53 GMT"			\
+"Server: Kaiyuan's Web Server"				\
+"Content-Type: text/html"				\
+"Connection: Closed"
+
+
+#define INDEXHTML					\
+"<html>"						\
+"<title>Kws HTTP Server</title>"			\
+"<body>"						\
+"<h1>Kws HTTP Server</h1>"				\
+"Default Home Page"					\
+"</body>"						\
+"</html>"
 #endif

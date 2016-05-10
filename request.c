@@ -102,8 +102,8 @@ void kws_http_request_handle(void *data)
 		return;
 	}
 	request = (struct kws_request *)data;
-	INFO("-----HTTP request-----");
-	INFO("%s", request->mem);
-	INFO("----------------------");
-	INFO("Handle this request in thread pool");
+	while (kws_request_queue_in(DoneRequestQueue, request) < 0) {
+		wait_event_interruptible(DoneRequestQueue->wq,
+				DoneRequestQueue-> count < DoneRequestQueue->size || KwsStatus == EXIT);
+	}
 }

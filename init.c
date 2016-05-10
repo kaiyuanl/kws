@@ -16,6 +16,10 @@ static int status = RUNNING;
 module_param(status, int, 0644);
 MODULE_PARM_DESC(status, "Running - 0\nRestart - 1\nStop - 2");
 
+static char *wwwroot = DEFAULT_WWWROOT;
+module_param(wwwroot, charp, 0644);
+MODULE_PARM_DESC(wwwroot, "WWWRoot");
+
 int CPU;
 int WorkerNum;
 int PoolThreadNum;
@@ -26,6 +30,7 @@ struct task_struct *Master;
 size_t MemSize;
 struct kws_pool *ThreadPool;
 void (*kws_task_handler)(void *data);
+char *WWWRoot;
 
 
 static int kws_init(void)
@@ -39,12 +44,13 @@ static int kws_init(void)
 	WorkerNum = workers;
 	KwsStatus = status;
 	MemSize = PAGE_SIZE;
+	WWWRoot = wwwroot;
 	master = kthread_run(&kws_master, NULL, "kws master thread");
 	if(master == NULL) {
 		ERR("Create master thread failed\n");
 	}
 	Master = master;
-	kws_task_handler = &kws_http_request_handle;
+	kws_task_handler = &kws_default_handle;
 	INFO("Leave kws_init");
 
 	return 0;

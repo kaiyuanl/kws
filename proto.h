@@ -12,6 +12,7 @@
 #include <linux/cpumask.h>
 #include <linux/hashtable.h>
 #include <linux/jiffies.h>
+#include <linux/fs.h>
 #include <linux/delay.h>
 #include <net/sock.h>
 
@@ -29,6 +30,8 @@
 #define BADREQUEST 5	/* Bad HTTP request*/
 #define REQTIMEOUT 6
 #define REUSECLOSE 7
+
+#define DEFAULT_WWWROOT		"/var/wwwroot"
 
 #define INFO(x, ...)  printk(KERN_DEBUG x"\n", ##__VA_ARGS__)
 
@@ -89,8 +92,8 @@ typedef struct kws_request {
 	int connection;
 	int content_length;
 
-	int response_code;
-	char *err_msg;
+	int status_code;
+	char *status_msg;
 	struct kws_string url;
 	struct kws_field_kv fields;
 } kws_request;
@@ -134,6 +137,7 @@ extern struct task_struct *Pooler;
 extern int WorkerNum;
 extern int PoolThreadNum;
 extern size_t MemSize;
+extern char *WWWRoot;
 
 extern struct kws_queue *RequestQueue;
 extern struct kws_queue *DoneRequestQueue;
@@ -176,5 +180,9 @@ int kws_http_parse(struct kws_request *request, size_t read_len);
 
 int kws_task_pool_init(struct kws_pool **pool, size_t size);
 int kws_pooler(void *none);
+
+void kws_default_handle(void *data);
+
+void kws_send_200_header(struct socket *sock);
 
 #endif
