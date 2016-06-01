@@ -14,6 +14,7 @@
 #include <linux/jiffies.h>
 #include <linux/fs.h>
 #include <linux/delay.h>
+#include <asm/uaccess.h>
 #include <net/sock.h>
 
 #define BACKLOG 64
@@ -34,6 +35,8 @@
 #define DEFAULT_WWWROOT		"/var/wwwroot"
 
 #define INFO(x, ...)  printk(KERN_DEBUG x"\n", ##__VA_ARGS__)
+
+#define KWS_DEBUG
 
 #ifdef KWS_DEBUG
 #define ERR(x,...)  printk(KERN_ALERT x"at %s line %i\n", ##__VA_ARGS__ ,__FILE__,__LINE__)
@@ -77,6 +80,8 @@ typedef struct kws_field_kv {
 	struct list_head list;
 } kws_field_kv;
 
+struct kws_response;
+
 typedef struct kws_request {
 	struct socket *sock;
 	unsigned long create_time;
@@ -84,7 +89,7 @@ typedef struct kws_request {
 	int http_version;
 	int status;
 	char *mem;
-	int size;
+	size_t size;
 	int len;
 	int should_read;
 	int bound;
@@ -96,7 +101,18 @@ typedef struct kws_request {
 	char *status_msg;
 	struct kws_string url;
 	struct kws_field_kv fields;
-} kws_request;
+
+	struct kws_response *response;
+}kws_request;
+
+#define STATIC		0x01
+#define DYNAMIC		0x02
+
+struct kws_response {
+	int type;
+	size_t size;
+	char *mem;
+};
 
 struct kws_queue {
 	spinlock_t lock;

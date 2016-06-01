@@ -10,6 +10,8 @@
 #define HTTPVER10		10
 #define HTTPVER09		9
 
+#define URLMAX			512 /*2083*/
+
 /* HTTP fields */
 #define ACCEPT			"Accept"
 #define ACCEPTCHARSET		"Accept-Charset"

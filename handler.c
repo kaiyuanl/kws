@@ -17,19 +17,47 @@ int kws_is_static_file(struct kws_string fname)
 void kws_static_handle(struct kws_request *request)
 {
 	struct file *filp;
+	char url[URLMAX] = {0};
+	size_t file_len;
+	ssize_t ret;
+	mm_segment_t fs;
 
-	/* Kws return index.html as response regardless url of request.
-	 * This is a demo
-	 */
-	filp = filp_open("/usr/wwwroot/index.html", O_RDONLY, 0);
-	if (filp == NULL) {
-		ERR("Cannot open file");
+	strncat(url, WWWRoot, strlen(WWWRoot));
+	strncat(url, request->url.pstart, request->url.len);
+	INFO("FS path : %s", url);
+
+	filp = filp_open(url, O_RDONLY, 0);
+	if (filp == NULL || IS_ERR(filp)) {
+		INFO("Cannot open file");
 		return;
 	}
-
-	kws_send_200_header(request->sock);
-	kws_sock_write(request->sock, "\r\n\r\n", 4);
-	kws_sock_write(request->sock, INDEXHTML, strlen(INDEXHTML));
+	/* ToDo: Read and send file to socket */
+	file_len = filp->f_path.dentry->d_inode->i_size;
+	request->response = (struct kws_response *)kmalloc(sizeof(struct kws_response), GFP_KERNEL);
+	if (request->response == NULL) {
+		INFO("Response allocated failed");
+		return;
+	}
+	request->response->type = STATIC;
+	request->response->size = file_len;
+	request->response->mem = (char *)kmalloc(file_len, GFP_KERNEL);
+	if (request->response == NULL) {
+		INFO("Mem allocated failed");
+		kfree(request->response);
+		return;
+	}
+	fs = get_fs();
+	// Set segment descriptor associated to kernel space
+	set_fs(get_ds());
+	// Read the file
+	ret = vfs_read(filp, request->response->mem, file_len, &filp->f_pos);
+	if(ret < 0)
+	{
+		ERR("Read file failed");
+	}
+	// Restore segment descriptor
+	set_fs(fs);
+	kws_sock_write(request->sock, request->response->mem, file_len);
 }
 
 void kws_dynamic_handle(struct kws_request *request)
@@ -62,6 +90,18 @@ void kws_default_handle(void *data)
 		kws_static_handle(request);
 	} else {
 		kws_dynamic_handle(request);
+	}
+	if (request->connection == KEEPALIVE) {
+		request->status = READING;
+		while (kws_request_queue_in(RequestQueue, request) < 0) {
+			wait_event_interruptible(RequestQueue->wq, RequestQueue-> count < RequestQueue->size || KwsStatus == EXIT);
+			if (KwsStatus == EXIT) {
+				kws_request_release(request);
+				return;
+			}
+		}
+	} else {
+		kws_request_release(request);
 	}
 }
 

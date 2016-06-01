@@ -122,9 +122,10 @@ int kws_sock_write(struct socket *sock, char *buff, size_t len)
 	};
 
 	struct msghdr msg = {
-		.msg_flags = MSG_DONTWAIT
+		.msg_flags = MSG_DONTWAIT | MSG_NOSIGNAL,
 	};
-
+	INFO("Enter kws_sock_write");
 	rlen = kernel_sendmsg(sock, &msg, &vec, 1, len);
+	INFO("Leave kws_sock_write");
 	return rlen;
 }

@@ -35,7 +35,6 @@ static int kws_pool_worker(void *param)
 				(pool_task->task_handler)(request);
 			}
 			pool_task->status = TASKDONE;
-			kws_request_release(request);
 			kws_task_pool_return(ThreadPool, pool_task);
 		}
 
